@@ -1,7 +1,12 @@
 module Bioinfomatics where
 
+import Test.QuickCheck
+
 data Nucleotide = A | C | G | T
-                  deriving (Show, Read)
+                  deriving (Eq, Read, Show)
+
+instance Arbitrary Nucleotide where
+   arbitrary = elements [A, C, G, T]
 
 -- Gets the complement of a Nucleotide.
 compn :: Nucleotide -> Nucleotide
@@ -21,8 +26,8 @@ comps :: Sequence -> Sequence
 comps = map compn
 
 -- Gets the reverse complement of a Sequence.
-revcomps :: Sequence -> Sequence
-revcomps = reverse . comps
+revcomp :: Sequence -> Sequence
+revcomp = reverse . comps
 
 data Codon = Codon Nucleotide Nucleotide Nucleotide
 
@@ -122,3 +127,21 @@ codons _ = []
 type Frame = Int
 translates :: Frame -> Sequence -> [AminoAcid]
 translates n = map translatec . drop n . codons
+
+-- Gets a list of all DNA palindromes in a Sequence, defined as equaling its
+-- reverse complement.
+palindromes :: Sequence -> [Sequence]
+palindromes s = concatMap (palindromes' s) [2..length s]
+ where
+   palindromes' s2 n
+      | n > length s2 = []
+      | otherwise    = if slice == revcomp slice
+                       then slice:palindromes' (tail s2) n
+                       else       palindromes' (tail s2) n
+      where slice = take n s2
+
+-- Tests -----------------------------------------------------------------------
+prop_compcompn n = (compn . compn) n == n
+prop_compcomps s = (comps . comps) s == s
+prop_revcomp s = (reverse . comps) s == revcomp s
+prop_1codon1aa s = length (codons s) == length (translates 0 s)
