@@ -1,7 +1,7 @@
 module Bioinfomatics where
 
 data Nucleotide = A | C | G | T
-                  deriving (Show, Read)
+                  deriving (Eq, Show, Read)
 
 -- Gets the complement of a Nucleotide.
 compn :: Nucleotide -> Nucleotide
@@ -116,6 +116,11 @@ translatec (Codon T T T) = Phe
 codons :: Sequence -> [Codon]
 codons (n1:n2:n3:ns) = Codon n1 n2 n3 : codons ns
 codons _ = []
+
+-- Gets the dotplot of two sequences.
+dotplot :: Sequence -> Sequence -> [[Bool]]
+dotplot (x:xs) ys = map (==x) ys : dotplot xs ys
+dotplot _      _  = []
 
 -- Translates a Sequence into a list of AminoAcid, per an integer frame.
 -- Frame should be 0, 1, or 2, but no such restriction is necessary here.
